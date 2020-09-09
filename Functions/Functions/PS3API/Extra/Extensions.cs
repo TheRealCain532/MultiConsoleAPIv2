@@ -33,9 +33,6 @@ namespace MultiLib
         public Extension(SelectAPI API)
         {
             CurrentAPI = API;
-            if (API == SelectAPI.PCAPI)
-                if (Common.PcAPI == null)
-                    Common.PcAPI = new PCAPI();
             if (API == SelectAPI.TargetManager)
                 if (Common.TmApi == null)
                     Common.TmApi = new TMAPI();
@@ -67,25 +64,23 @@ namespace MultiLib
         public short ReadInt16(uint offset)
         {
             byte[] buffer = GetBytes(offset, 2, CurrentAPI);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buffer, 0, 2);
             return BitConverter.ToInt16(buffer, 0);
         }
-
         /// <summary>Read and return an integer 32 bits.</summary>
         public int ReadInt32(uint offset)
         {
             byte[] buffer = GetBytes(offset, 4, CurrentAPI);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buffer, 0, 4);
             return BitConverter.ToInt32(buffer, 0);
         }
-
         /// <summary>Read and return an integer 64 bits.</summary>
         public long ReadInt64(uint offset)
         {
             byte[] buffer = GetBytes(offset, 8, CurrentAPI);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buffer, 0, 8);
             return BitConverter.ToInt64(buffer, 0);
         }
@@ -96,18 +91,16 @@ namespace MultiLib
             byte[] buffer = GetBytes(offset, 1, CurrentAPI);
             return buffer[0];
         }
-
         /// <summary>Read a string with a length to the first byte equal to an value null (0x00).</summary>
         public byte[] ReadBytes(uint offset, int length)
         {
                 return GetBytes(offset, (uint)length, CurrentAPI);
         }
-
         /// <summary>Read and return an unsigned integer 16 bits.</summary>
         public ushort ReadUInt16(uint offset)
         {
             byte[] buffer = GetBytes(offset, 2, CurrentAPI);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buffer, 0, 2);
             return BitConverter.ToUInt16(buffer, 0);
         }
@@ -116,16 +109,15 @@ namespace MultiLib
         public uint ReadUInt32(uint offset)
         {
             byte[] buffer = GetBytes(offset, 4, CurrentAPI);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buffer, 0, 4);
             return BitConverter.ToUInt32(buffer, 0);
         }
-
         /// <summary>Read and return an unsigned integer 64 bits.</summary>
         public ulong ReadUInt64(uint offset)
         {
             byte[] buffer = GetBytes(offset, 8, CurrentAPI);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buffer, 0, 8);
             return BitConverter.ToUInt64(buffer, 0);
         }
@@ -134,7 +126,7 @@ namespace MultiLib
         public float ReadFloat(uint offset)
         {
             byte[] buffer = GetBytes(offset, 4, CurrentAPI);  
-                if (CurrentAPI != SelectAPI.PCAPI)
+                
                     Array.Reverse(buffer, 0, 4);
             return BitConverter.ToSingle(buffer, 0);
         }
@@ -146,7 +138,7 @@ namespace MultiLib
             for (int i = 0; i < arrayLength; i++)
             {
                 byte[] buffer = GetBytes(offset + ((uint)i*4), 4, CurrentAPI);
-                if (CurrentAPI != SelectAPI.PCAPI)
+                
                     Array.Reverse(buffer, 0, 4);
                 vec[i] = BitConverter.ToSingle(buffer, 0);
             }
@@ -157,7 +149,7 @@ namespace MultiLib
         public double ReadDouble(uint offset)
         {
             byte[] buffer = GetBytes(offset, 8, CurrentAPI);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buffer, 0, 8);
             return BitConverter.ToDouble(buffer, 0);
         }
@@ -199,7 +191,7 @@ namespace MultiLib
         {
             byte[] buff = new byte[2];
             BitConverter.GetBytes(input).CopyTo(buff, 0);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buff, 0, 2);
             SetMem(offset, buff, CurrentAPI);
         }
@@ -209,7 +201,6 @@ namespace MultiLib
         {
             byte[] buff = new byte[4];
             BitConverter.GetBytes(input).CopyTo(buff, 0);
-            //if (CurrentAPI != SelectAPI.PCAPI)
                 Array.Reverse(buff, 0, 4);
             SetMem(offset, buff, CurrentAPI);
         }
@@ -219,7 +210,7 @@ namespace MultiLib
         {
             byte[] buff = new byte[8];
             BitConverter.GetBytes(input).CopyTo(buff, 0);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buff, 0, 8);
             SetMem(offset, buff, CurrentAPI);
         }
@@ -256,7 +247,7 @@ namespace MultiLib
         {
             byte[] buff = new byte[2];
             BitConverter.GetBytes(input).CopyTo(buff, 0);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buff, 0, 2);
             SetMem(offset, buff, CurrentAPI);
         }
@@ -266,7 +257,7 @@ namespace MultiLib
         {
             byte[] buff = new byte[4];
             BitConverter.GetBytes(input).CopyTo(buff, 0);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buff, 0, 4);
             SetMem(offset, buff, CurrentAPI);
         }
@@ -276,7 +267,7 @@ namespace MultiLib
         {
             byte[] buff = new byte[8];
             BitConverter.GetBytes(input).CopyTo(buff, 0);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buff, 0, 8);
             SetMem(offset, buff, CurrentAPI);
         }
@@ -286,7 +277,7 @@ namespace MultiLib
         {
             byte[] buff = new byte[4];
             BitConverter.GetBytes(input).CopyTo(buff, 0);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buff, 0, 4);
             SetMem(offset, buff, CurrentAPI);
         }
@@ -298,7 +289,7 @@ namespace MultiLib
             for (int i = 0; i < input.Length; i++)
             {
                 BitConverter.GetBytes(input[i]).CopyTo(buff, 0);
-                if (CurrentAPI != SelectAPI.PCAPI)
+                
                     Array.Reverse(buff, 0, 4);
                 SetMem(offset+((uint)i*4), buff, CurrentAPI);
             }
@@ -309,7 +300,7 @@ namespace MultiLib
         {
             byte[] buff = new byte[8];
             BitConverter.GetBytes(input).CopyTo(buff, 0);
-            if (CurrentAPI != SelectAPI.PCAPI)
+            
                 Array.Reverse(buff, 0, 8);
             SetMem(offset, buff, CurrentAPI);
         }
@@ -321,11 +312,6 @@ namespace MultiLib
                 Common.TmApi.SetMemory(Address, buffer);
             else if (API == SelectAPI.XboxNeighborhood)
                 Common.XboxApi.SetMemory(Address, buffer);
-            else if (API == SelectAPI.PCAPI)
-            {
-                Array.Reverse(buffer);
-                Common.PcAPI.SetMemory(Address, buffer);
-            }
         }
 
         private void GetMem(uint offset, byte[] buffer, SelectAPI API)
@@ -336,8 +322,6 @@ namespace MultiLib
                 Common.TmApi.GetMemory(offset, buffer);
             else if (API == SelectAPI.XboxNeighborhood)
                 Common.XboxApi.MemFunc(offset, buffer);
-            else if (API == SelectAPI.PCAPI)
-                Common.PcAPI.GetMemory(offset, buffer);
         }
 
         private byte[] GetBytes(uint offset, uint length, SelectAPI API)
@@ -349,17 +333,18 @@ namespace MultiLib
                 buffer = Common.TmApi.GetBytes(offset, length);
             else if (API == SelectAPI.XboxNeighborhood)
                 buffer = Common.XboxApi.GetBytes(offset, length);
-            else if (API == SelectAPI.PCAPI)
-                buffer = Common.PcAPI.GetBytes(offset, length);
             return buffer;
         }
-
+        //private byte[] GetBytes(ulong offset, uint length)
+        //{
+        //    byte[] buffer = new byte[length];
+        //    return Common.PcAPI.GetBytes(offset, length);
+        //}
         private class Common
         {
             public static CCAPI CcApi;
             public static TMAPI TmApi;
             public static XboxAPI XboxApi;
-            public static PCAPI PcAPI;
         }
 
     }

@@ -24,13 +24,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using Microsoft.Win32;
-using System.Security.Cryptography;
 
 namespace MultiLib
 {
@@ -139,7 +135,6 @@ namespace MultiLib
                     {
                         if (libModule == IntPtr.Zero)
                             libModule = LoadLibrary(DllUrl);
-
                         if (libModule != IntPtr.Zero)
                         {
                             CCAPIFunctionsList.Clear();
@@ -185,12 +180,13 @@ namespace MultiLib
                             }
                             else
                             {
-                                MessageBox.Show("Impossible to load CCAPI 2.60+", "This CCAPI.dll is not compatible", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show("1 Impossible to load CCAPI 2.60+", "This CCAPI.dll is not compatible", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                         }
                         else
                         {
-                            MessageBox.Show("Impossible to load CCAPI 2.60+", "CCAPI.dll cannot be loaded", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("2 Impossible to load CCAPI 2.60+", "CCAPI.dll cannot be loaded", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            
                         }
                     }
                     else

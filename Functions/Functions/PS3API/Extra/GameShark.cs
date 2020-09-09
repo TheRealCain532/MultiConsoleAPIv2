@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MultiLib;
-using System.Windows.Forms;
-using System.Collections;
 namespace MultiLib
 {
     public class GameShark
@@ -105,7 +98,9 @@ namespace MultiLib
                 case CodeType.SerialRepeater: ///50
                     //length is 8, parsable is 6 50 00 XX YY 00 ZZ ==> XX = length YY = jump ZZ = To Add (as increment)
                     //TTTTTTTT VVVV ==> TTTTTTTT = start address VVVV = value written at each address + ZZ
+                    
                     address[0] = address[0] - 0x2cb3f0;
+                    Console.WriteLine(address[0].ToString("X"));
                     int[] magic = SplitInt(int.Parse(address[0].ToString("X")));
                     uint TTTTTTTT = address[1];
                     int
@@ -115,7 +110,7 @@ namespace MultiLib
                     byte[] VVVV = bytes[1];
 
                     Console.WriteLine(string.Format("XX = {0} YY = {1} ZZ = {2} start = {3:X} writing {4}", XX, YY, ZZ, TTTTTTTT, BitConverter.ToString(VVVV)));
-                    for (int i = 0; i < XX; i++)
+                    for (int i = 1; i < XX; i++)
                     {
                         Extension.WriteBytes(TTTTTTTT, VVVV);
                         if (ZZ > 0)
@@ -232,19 +227,19 @@ namespace MultiLib
             Is_Connected = CCAPI.ConnectTarget();
             CCAPI.GetProcessList(out PID);
             if (Is_Connected)
-                Is_Connected = CCAPI.AttachProcess(PID[0]) >= 0;
+                Is_Connected = CCAPI.AttachProcess(PID[0]) > 0;
             return Is_Connected;
         }
 
         public uint GSC(string GSCode)
         {
-            return (Convert.ToUInt32(GSCode.Split(' ')[0].Remove(0, 2), 0x10) + 0x2cb3f0);
+            return (Convert.ToUInt32(GSCode.Split(' ')[0].Remove(0, 2), 0x10) + 0x770780);//0x2cb3f0);
         }
         public uint[] GSC(string[] GSCode)
         {
             uint[] array = new uint[GSCode.Length];
             for (int i = 0; i < GSCode.Length; i++)
-                array[i] = Convert.ToUInt32(GSCode[i].Split(' ')[0].Remove(0, 2), 0x10) + 0x2cb3f0;
+                array[i] = Convert.ToUInt32(GSCode[i].Split(' ')[0].Remove(0, 2), 0x10) + 0x770780;//0x2cb3f0;
             return array;
         }
         public byte[] GSB(string input)
@@ -283,7 +278,7 @@ namespace MultiLib
 
         static bool ByteCompare(byte[] a1, byte[] a2)
         {
-            return StructuralComparisons.StructuralEqualityComparer.Equals(a1, a2);
+            return false; //StructuralComparisons.StructuralEqualityComparer.Equals(a1, a2);
         }
     }
 }

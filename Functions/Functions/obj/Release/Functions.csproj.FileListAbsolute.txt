@@ -70,3 +70,22 @@ C:\Users\Brandon\Source\Repos\MultiConsoleAPI\Functions\Functions\obj\Release\Mu
 C:\Users\Brandon\Source\Repos\MultiConsoleAPI\Functions\Functions\obj\Release\Functions.csproj.GenerateResource.Cache
 C:\Users\Brandon\Source\Repos\MultiConsoleAPI\Functions\Functions\obj\Release\MultiLib.dll
 C:\Users\Brandon\Source\Repos\MultiConsoleAPI\Functions\Functions\obj\Release\MultiLib.pdb
+H:\Users\Brandon\source\repos\MultiConsoleAPI\Functions\Functions\bin\Release\MultiLib.dll
+H:\Users\Brandon\source\repos\MultiConsoleAPI\Functions\Functions\bin\Release\MultiLib.pdb
+H:\Users\Brandon\source\repos\MultiConsoleAPI\Functions\Functions\obj\Release\Functions.csprojResolveAssemblyReference.cache
+H:\Users\Brandon\source\repos\MultiConsoleAPI\Functions\Functions\obj\Release\MultiLib.Properties.Resources.resources
+H:\Users\Brandon\source\repos\MultiConsoleAPI\Functions\Functions\obj\Release\Functions.csproj.GenerateResource.cache
+H:\Users\Brandon\source\repos\MultiConsoleAPI\Functions\Functions\obj\Release\Functions.csproj.CoreCompileInputs.cache
+H:\Users\Brandon\source\repos\MultiConsoleAPI\Functions\Functions\obj\Release\MultiLib.dll
+H:\Users\Brandon\source\repos\MultiConsoleAPI\Functions\Functions\obj\Release\MultiLib.pdb
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\obj\Release\MultiLib.Properties.Resources.resources
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\obj\Release\Functions.csproj.GenerateResource.cache
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\obj\Release\MultiLib.dll
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\obj\Release\MultiLib.pdb
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\bin\Release\MultiLib.dll
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\bin\Release\MultiLib.pdb
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\obj\Release\Functions.csproj.CopyComplete
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\obj\Release\Functions.csproj.CoreCompileInputs.cache
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\bin\Release\ps3tmapi_net.dll
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\bin\Release\xdevkit.dll
+F:\Coding Projects\MultiConsoleAPI\Functions\Functions\obj\Release\Functions.csprojAssemblyReference.cache

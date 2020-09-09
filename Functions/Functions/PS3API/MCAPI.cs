@@ -21,14 +21,11 @@
 // ************************************************* //
 
 using System;
-using MultiLib.Properties;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
 
@@ -68,7 +65,6 @@ namespace MultiLib
                 IsConnected = stats.GetStatus() == "Connected";
             if (SetAPI.API == SelectAPI.ControlConsole)
                     IsConnected = CCAPI.GetConnectionStatus() > 0;
-
             return IsConnected;
         }
         public void setTargetName(string value)
@@ -93,9 +89,6 @@ namespace MultiLib
             if (API == SelectAPI.XboxNeighborhood)
                 if (Common.XboxApi == null)
                     Common.XboxApi = new XboxAPI();
-            if (API == SelectAPI.PCAPI)
-                if (Common.PcApi == null)
-                    Common.PcApi = new PCAPI();
         }
 
         private class SetLang
@@ -113,7 +106,6 @@ namespace MultiLib
             public static CCAPI CcApi;
             public static TMAPI TmApi;
             public static XboxAPI XboxApi;
-            public static PCAPI PcApi;
         }
 
         /// <summary>Force a language for the console list popup.</summary>
@@ -159,28 +151,17 @@ namespace MultiLib
                 if (result)
                     targetIp = ip;
             }
-            else if (SetAPI.API == SelectAPI.PCAPI)
-                result = Common.PcApi.ConnectTarget(ip);
             return result;
         }
-        //public bool ConnectTarget()
-        //{
-        //    MakeInstanceAPI(GetCurrentAPI());
-        //    bool result = false;
-        //    if (SetAPI.API == SelectAPI.TargetManager)
-        //        result = Common.TmApi.ConnectTarget(0);
-        //    else result = false;
-        //    return result;
-        //}
         /// <summary>Disconnect Target with selected API.</summary>
         public void DisconnectTarget()
         {
-            if (SetAPI.API == SelectAPI.TargetManager)
-                Common.TmApi.DisconnectTarget();
-            else if (SetAPI.API == SelectAPI.ControlConsole)
-                Common.CcApi.DisconnectTarget();
-            else if (SetAPI.API == SelectAPI.XboxNeighborhood)
-                Common.XboxApi.Disconnect();
+            switch(SetAPI.API)
+            {
+                case SelectAPI.TargetManager: Common.TmApi.DisconnectTarget(); break;
+                case SelectAPI.ControlConsole: Common.CcApi.DisconnectTarget(); break;
+                case SelectAPI.XboxNeighborhood: Common.XboxApi.Disconnect(); break;
+            }
         }
 
         /// <summary>Attach the current process (current Game) with selected API.</summary>
@@ -230,8 +211,6 @@ namespace MultiLib
                 Common.CcApi.SetMemory(offset, buffer);
             else if (SetAPI.API == SelectAPI.XboxNeighborhood)
                 Common.XboxApi.SetMemory(offset, buffer);
-            else if (SetAPI.API == SelectAPI.PCAPI)
-                Common.PcApi.SetMemory(offset, buffer);
         }
 
         /// <summary>Get memory from offset using the Selected API.</summary>
@@ -243,8 +222,6 @@ namespace MultiLib
                 Common.CcApi.GetMemory(offset, buffer);
             else if (SetAPI.API == SelectAPI.XboxNeighborhood)
                 Common.XboxApi.GetMemory(offset, buffer);
-            else if (SetAPI.API == SelectAPI.PCAPI)
-                Common.PcApi.GetMemory(offset, buffer);
         }
         public int GetMemory(ulong offset, byte[] buffer)
         {
@@ -268,7 +245,6 @@ namespace MultiLib
                 Common.XboxApi.GetMemory(offset, buffer);
             return buffer;
         }
-
         /// <summary>Change current API.</summary>
         public void ChangeAPI(SelectAPI API)
         {
@@ -328,10 +304,6 @@ namespace MultiLib
         {
             get { return new GameShark(); }
         }
-        public PCAPI PcAPI
-        {
-            get { return new PCAPI(); }
-        }
         public class ApplicationList
         {
             private MultiConsoleAPI Api;
@@ -361,8 +333,8 @@ namespace MultiLib
                 btnConnect.Enabled = false;
                 btnConnect.Click += (sender, e) =>
                 {
-                    if (tNum > -1)
-                        Result = Common.PcApi.ConnectTarget(ProcID[tNum].ProcessName);
+                    //if (tNum > -1)
+                    //    Result = Common.PcApi.ConnectTarget(ProcID[tNum].ProcessName);
                     formList.Close();
                 };
 
@@ -657,6 +629,136 @@ namespace MultiLib
 
                 return Result;
             }
+        }
+
+        public class ProcessList_d
+        {
+            private TMAPI Api;
+            public ProcessList_d(TMAPI f) { Api = f; }
+            public bool Show()
+            {
+                bool Result = false;
+                uint SelectedProcess = 0;
+                PS3TMAPI.GetProcessList(TMAPI.Target, out TMAPI.Parameters.processIDs);
+                // Instance of widgets
+                Label lblInfo = new Label();
+                Button btnConnect = new Button();
+                Button btnRefresh = new Button();
+                ListViewGroup listViewGroup = new ListViewGroup("Processes", HorizontalAlignment.Left);
+                ListView listView = new ListView();
+                Form formList = new Form();
+
+                // Create our button connect
+                btnConnect.Location = new Point(12, 254);
+                btnConnect.Name = "btnConnect";
+                btnConnect.Size = new Size(198, 23);
+                btnConnect.TabIndex = 1;
+                btnConnect.Text = "Attach";
+                btnConnect.UseVisualStyleBackColor = true;
+                btnConnect.Enabled = false;
+                btnConnect.Click += (sender, e) =>
+                {
+                    if (SelectedProcess > 0)
+                        if (Api.AttachProcess(SelectedProcess))
+                        {
+                            formList.Close();
+                            Result = true;
+                        }
+                        else MessageBox.Show("Failed somehow");
+                    else
+                        MessageBox.Show("No Process Selected!");
+                };
+
+                // Create our button refresh
+                btnRefresh.Location = new Point(216, 254);
+                btnRefresh.Name = "btnRefresh";
+                btnRefresh.Size = new Size(198, 23);
+                btnRefresh.TabIndex = 1;
+                btnRefresh.Text = "Refresh";
+                btnRefresh.UseVisualStyleBackColor = true;
+                btnRefresh.Click += (sender, e) =>
+                {
+                    listView.Clear();
+                    for (int i = 0; i < Api.SCE.ProcessIDs().Length; i++)
+                    {
+                        ListViewItem item = new ListViewItem($" {Api.ProcessNames[i]} ");
+                        item.ImageIndex = 0;
+                        listView.Items.Add(item);
+                    }
+                };
+
+                // Create our list view
+                listView.Font = new Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+                listViewGroup.Header = "Consoles";
+                listViewGroup.Name = "consoleGroup";
+                listView.Groups.AddRange(new ListViewGroup[] { listViewGroup });
+                listView.HideSelection = false;
+                listView.Location = new Point(12, 12);
+                listView.MultiSelect = false;
+                listView.Name = "ConsoleList";
+                listView.ShowGroups = false;
+                listView.Size = new Size(400, 215);
+                listView.TabIndex = 0;
+                listView.UseCompatibleStateImageBehavior = false;
+                listView.View = View.List;
+                listView.ItemSelectionChanged += (sender, e) =>
+                {
+                    SelectedProcess = Convert.ToUInt32(Api.ProcessNames[e.ItemIndex].Split('|')[0].Trim(), 16);
+                    btnConnect.Enabled = true;
+                    lblInfo.Text = $"\"{Api.ProcessNames[e.ItemIndex].Split('/').Last().Replace("\n", "")}\" Selected";
+                    //print pData
+                };
+
+                // Create our label
+                lblInfo.AutoSize = true;
+                lblInfo.Location = new Point(12, 234);
+                lblInfo.Name = "lblInfo";
+                lblInfo.Size = new Size(158, 13);
+                lblInfo.TabIndex = 3;
+                lblInfo.Text = "Select a Process from this list!";
+
+                // Create our form
+                formList.MinimizeBox = false;
+                formList.MaximizeBox = false;
+                formList.ClientSize = new Size(424, 285);
+                formList.AutoScaleDimensions = new SizeF(6F, 13F);
+                formList.AutoScaleMode = AutoScaleMode.Font;
+                formList.FormBorderStyle = FormBorderStyle.FixedSingle;
+                formList.StartPosition = FormStartPosition.CenterScreen;
+                formList.Text = "Select Process";
+                formList.Controls.Add(listView);
+                formList.Controls.Add(lblInfo);
+                formList.Controls.Add(btnConnect);
+                formList.Controls.Add(btnRefresh);
+
+                // Start to update our list
+                ImageList imgL = new ImageList();
+                //imgL.Images.Add(Resources.ps3);
+                //listView.SmallImageList = imgL;
+
+
+                int sizeData = Api.SCE.ProcessIDs().Length;
+                for (int i = 0; i < sizeData; i++)
+                {
+                    ListViewItem item = new ListViewItem($" {Api.ProcessNames[i]} ");
+                    item.ImageIndex = 0;
+                    listView.Items.Add(item);
+                }
+
+                // If there are more than 0 targets we show the form
+                // Else we inform the user to create a console.
+                if (sizeData > 0)
+                    formList.ShowDialog();
+                else
+                {
+                    Result = false;
+                    formList.Close();
+                    //MessageBox.Show(strTraduction("noConsole"), strTraduction("noConsoleTitle"), MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+
+                return Result;
+            }
+
         }
     }
 }
