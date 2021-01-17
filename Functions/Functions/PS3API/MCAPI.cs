@@ -1,24 +1,6 @@
-﻿// ************************************************* //
-//    --- Copyright (c) 2015 iMCS Productions ---    //
-// ************************************************* //
-//              MultiLib v4 By FM|T iMCSx              //
-//                                                   //
-// Features v4.5 :                                   //
-// - Support CCAPI v2.60+ C# by iMCSx.               //
-// - Read/Write memory as 'double'.                  //
-// - Read/Write memory as 'float' array.             //
-// - Constructor overload for ArrayBuilder.          //
-// - Some functions fixes.                           //
-//                                                   //
-// Credits : Enstone, Buc-ShoTz                      //
-//                                                   //
-// Follow me :                                       //
-//                                                   //C:\Users\Brandon\Desktop\Projects\New folder (2)\Functions\Functions\PS3API\MCAPI.cs
-// FrenchModdingTeam.com                             //
-// Twitter.com/iMCSx                                 //
-// Facebook.com/iMCSx                                //
-//                                                   //
-// ************************************************* //
+﻿///
+//This source is based on the original PS3Lib but has been HEAVILY modified.
+///
 
 using System;
 using System.Collections.Generic;
@@ -58,6 +40,7 @@ namespace MultiLib
         }
         bool IsConnected;
         TMAPI.SCECMD stats = new TMAPI.SCECMD();
+
         public Boolean ConnectionStatus()
         {
             MakeInstanceAPI(GetCurrentAPI());
@@ -640,6 +623,7 @@ namespace MultiLib
                 bool Result = false;
                 uint SelectedProcess = 0;
                 PS3TMAPI.GetProcessList(TMAPI.Target, out TMAPI.Parameters.processIDs);
+                foreach (var item in TMAPI.Parameters.processIDs) Console.WriteLine(item.ToString("X"));
                 // Instance of widgets
                 Label lblInfo = new Label();
                 Button btnConnect = new Button();

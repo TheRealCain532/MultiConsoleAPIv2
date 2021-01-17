@@ -42,7 +42,7 @@ namespace MultiLib
 
         public TMAPI()
         {
-            Console.WriteLine(ConnectTarget().ToString());
+
         }
    
         public Extension Extension
@@ -187,6 +187,7 @@ namespace MultiLib
             Target = TargetIndex;
             result = PS3TMAPI.SUCCEEDED(PS3TMAPI.InitTargetComms());
             result = PS3TMAPI.SUCCEEDED(PS3TMAPI.Connect(TargetIndex, null));
+            PS3TMAPI.GetProcessList(Target, out Parameters.processIDs);
             return result;
         }
 
@@ -202,6 +203,8 @@ namespace MultiLib
             {
                 result = PS3TMAPI.SUCCEEDED(PS3TMAPI.GetTargetFromName(TargetName, out Target));
                 result = PS3TMAPI.SUCCEEDED(PS3TMAPI.Connect(Target, null));
+                PS3TMAPI.GetProcessList(Target, out Parameters.processIDs);
+
             }
             return result;
         }
@@ -237,7 +240,7 @@ namespace MultiLib
             else isOK = false;
             if (isOK)
             {
-                ulong uProcess = Parameters.processIDs[0];
+                uint uProcess = Parameters.processIDs[2];
                 Parameters.ProcessID = Convert.ToUInt32(uProcess);
                 PS3TMAPI.ProcessAttach(Target, PS3TMAPI.UnitType.PPU, Parameters.ProcessID);
                 PS3TMAPI.ProcessContinue(Target, Parameters.ProcessID);
