@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.Net;
 
 namespace MultiLib
 {
@@ -23,20 +24,26 @@ namespace MultiLib
 
     public enum SelectAPI
     {
-        ControlConsole,
-        TargetManager,
-        XboxNeighborhood,
-        PCAPI,
+        CCAPI,
+        ProDG,
+        PS3MAPI,
+        Xbox360,
     }
 
-    public class MultiConsoleAPI
+    public class MCAPI
     {
         private static string targetName = String.Empty;
         private static string targetIp = String.Empty;
-        public MultiConsoleAPI(SelectAPI API = SelectAPI.TargetManager)
+        public MCAPI(SelectAPI API = SelectAPI.ProDG)
         {
             SetAPI.API = API;
             MakeInstanceAPI(API);
+        }
+        public MCAPI(string IP)
+        {
+            SetAPI.API = SelectAPI.ProDG;
+            MakeInstanceAPI(SelectAPI.ProDG);
+            this.IP = IP;
         }
         bool IsConnected;
         TMAPI.SCECMD stats = new TMAPI.SCECMD();
@@ -44,11 +51,28 @@ namespace MultiLib
         public Boolean ConnectionStatus()
         {
             MakeInstanceAPI(GetCurrentAPI());
-            if (SetAPI.API == SelectAPI.TargetManager)
+            if (SetAPI.API == SelectAPI.ProDG)
                 IsConnected = stats.GetStatus() == "Connected";
-            if (SetAPI.API == SelectAPI.ControlConsole)
+            if (SetAPI.API == SelectAPI.CCAPI)
                     IsConnected = CCAPI.GetConnectionStatus() > 0;
             return IsConnected;
+        }
+        public string IP { get { return targetIp; } set { targetIp = value; } }
+        public bool vsh
+        {
+            get {
+                if (IP == "") { MessageBox.Show("You need to set an IP!"); return false; }
+                else
+                    return new WebClient().DownloadString($"http://{IP}/peek.lv2?0x00003B38").Contains("38 60 00 01 4E 80 00 20"); }
+            set
+            {
+                if (IP != "")
+                {
+                    string data = value ? "386000014E800020" : "E92280087C0802A6";
+                    string magic = $"http://{IP}/poke.lv2?0x00003B38={data}";
+                    new WebClient().DownloadString(magic);
+                }
+            }
         }
         public void setTargetName(string value)
         {
@@ -56,20 +80,20 @@ namespace MultiLib
         }
         public void QuickNotify(string input)
         {
-            if (SetAPI.API == SelectAPI.ControlConsole)
+            if (SetAPI.API == SelectAPI.CCAPI)
                 Common.CcApi.Notify(CCAPI.NotifyIcon.TROPHY1, input);
             //if (SetAPI.API == SelectAPI.XboxNeighborhood)
             //    Common.XboxApi.Notify(XboxAPI.XNotify.FLASHING_HAPPY_FACE, input);
         }
         private void MakeInstanceAPI(SelectAPI API)
         {
-            if (API == SelectAPI.TargetManager)
+            if (API == SelectAPI.ProDG)
                 if (Common.TmApi == null)
                     Common.TmApi = new TMAPI();
-            if (API == SelectAPI.ControlConsole)
+            if (API == SelectAPI.CCAPI)
                 if (Common.CcApi == null)
                     Common.CcApi = new CCAPI();
-            if (API == SelectAPI.XboxNeighborhood)
+            if (API == SelectAPI.Xbox360)
                 if (Common.XboxApi == null)
                     Common.XboxApi = new XboxAPI();
         }
@@ -100,7 +124,7 @@ namespace MultiLib
        /// <summary>init again the connection if you use a Thread or a Timer.</summary>
         public void InitTarget()
         {
-            if (SetAPI.API == SelectAPI.TargetManager)
+            if (SetAPI.API == SelectAPI.ProDG)
                 Common.TmApi.InitComms();
         }
 
@@ -111,13 +135,11 @@ namespace MultiLib
             MakeInstanceAPI(GetCurrentAPI());
 
             bool result = false;
-            if (SetAPI.API == SelectAPI.TargetManager)
+            if (SetAPI.API == SelectAPI.ProDG)
                 result = Common.TmApi.ConnectTarget(target);
-            if (SetAPI.API == SelectAPI.XboxNeighborhood)
+            if (SetAPI.API == SelectAPI.Xbox360)
                 result = Common.XboxApi.ConnectTarget();
-            if (SetAPI.API == SelectAPI.PCAPI)
-                result = new ApplicationList(this).Show();
-            if (SetAPI.API == SelectAPI.ControlConsole)
+            if (SetAPI.API == SelectAPI.CCAPI)
                 result = new ConsoleList(this).Show();
             return result;
         }
@@ -128,7 +150,7 @@ namespace MultiLib
             MakeInstanceAPI(GetCurrentAPI());
             bool result = false;
             // We'll check again if the instance has been done.
-            if (SetAPI.API == SelectAPI.ControlConsole)
+            if (SetAPI.API == SelectAPI.CCAPI)
             {
                 result = Common.CcApi.SUCCESS(Common.CcApi.ConnectTarget(ip));
                 if (result)
@@ -141,9 +163,9 @@ namespace MultiLib
         {
             switch(SetAPI.API)
             {
-                case SelectAPI.TargetManager: Common.TmApi.DisconnectTarget(); break;
-                case SelectAPI.ControlConsole: Common.CcApi.DisconnectTarget(); break;
-                case SelectAPI.XboxNeighborhood: Common.XboxApi.Disconnect(); break;
+                case SelectAPI.ProDG: Common.TmApi.DisconnectTarget(); break;
+                case SelectAPI.CCAPI: Common.CcApi.DisconnectTarget(); break;
+                case SelectAPI.Xbox360: Common.XboxApi.Disconnect(); break;
             }
         }
 
@@ -154,16 +176,16 @@ namespace MultiLib
             MakeInstanceAPI(GetCurrentAPI());
 
             bool AttachResult = false;
-            if (SetAPI.API == SelectAPI.TargetManager)
+            if (SetAPI.API == SelectAPI.ProDG)
                 AttachResult = Common.TmApi.AttachProcess();
-            else if (SetAPI.API == SelectAPI.ControlConsole)
+            else if (SetAPI.API == SelectAPI.CCAPI)
                 AttachResult = Common.CcApi.SUCCESS(Common.CcApi.AttachProcess());
             return AttachResult;
         }
 
         public string GetConsoleName()
         {
-            if (SetAPI.API == SelectAPI.TargetManager)
+            if (SetAPI.API == SelectAPI.ProDG)
                 return Common.TmApi.SCE.GetTargetName();
             else
             {
@@ -188,31 +210,31 @@ namespace MultiLib
         /// <summary>Set memory to offset with selected API.</summary>
         public void SetMemory(uint offset, byte[] buffer)
         {
-            if (SetAPI.API == SelectAPI.TargetManager)
+            if (SetAPI.API == SelectAPI.ProDG)
                 Common.TmApi.SetMemory(offset, buffer);
-            else if (SetAPI.API == SelectAPI.ControlConsole)
+            else if (SetAPI.API == SelectAPI.CCAPI)
                 Common.CcApi.SetMemory(offset, buffer);
-            else if (SetAPI.API == SelectAPI.XboxNeighborhood)
+            else if (SetAPI.API == SelectAPI.Xbox360)
                 Common.XboxApi.SetMemory(offset, buffer);
         }
 
         /// <summary>Get memory from offset using the Selected API.</summary>
         public void GetMemory(uint offset, byte[] buffer)
         {
-            if (SetAPI.API == SelectAPI.TargetManager)
+            if (SetAPI.API == SelectAPI.ProDG)
                 Common.TmApi.GetMemory(offset, buffer);
-            else if (SetAPI.API == SelectAPI.ControlConsole)
+            else if (SetAPI.API == SelectAPI.CCAPI)
                 Common.CcApi.GetMemory(offset, buffer);
-            else if (SetAPI.API == SelectAPI.XboxNeighborhood)
+            else if (SetAPI.API == SelectAPI.Xbox360)
                 Common.XboxApi.GetMemory(offset, buffer);
         }
         public int GetMemory(ulong offset, byte[] buffer)
         {
-            if (SetAPI.API == SelectAPI.TargetManager)
+            if (SetAPI.API == SelectAPI.ProDG)
                 return Convert.ToInt32(NET.PS3TMAPI.ProcessGetMemory(0, NET.PS3TMAPI.UnitType.PPU, TMAPI.Parameters.ProcessID, 0, offset, ref buffer));
-            else if (SetAPI.API == SelectAPI.ControlConsole)
+            else if (SetAPI.API == SelectAPI.CCAPI)
                 return Common.CcApi.GetMemory(offset, buffer);
-            else if (SetAPI.API == SelectAPI.XboxNeighborhood)
+            else if (SetAPI.API == SelectAPI.Xbox360)
                 return Common.XboxApi.GetMemory(offset, buffer);
             else return 0;
         }
@@ -220,11 +242,11 @@ namespace MultiLib
         public byte[] GetBytes(uint offset, int length)
         {
             byte[] buffer = new byte[length];
-            if (SetAPI.API == SelectAPI.TargetManager)
+            if (SetAPI.API == SelectAPI.ProDG)
                 Common.TmApi.GetMemory(offset, buffer);
-            else if (SetAPI.API == SelectAPI.ControlConsole)
+            else if (SetAPI.API == SelectAPI.CCAPI)
                 Common.CcApi.GetMemory(offset, buffer);
-            else if (SetAPI.API == SelectAPI.XboxNeighborhood)
+            else if (SetAPI.API == SelectAPI.Xbox360)
                 Common.XboxApi.GetMemory(offset, buffer);
             return buffer;
         }
@@ -245,14 +267,12 @@ namespace MultiLib
         public string GetCurrentAPIName()
         {
             string output = String.Empty;
-            if (SetAPI.API == SelectAPI.TargetManager)
-                output = Enum.GetName(typeof(SelectAPI), SelectAPI.TargetManager).Replace("Manager", " Manager");
-            else if (SetAPI.API == SelectAPI.ControlConsole)
-                output = Enum.GetName(typeof(SelectAPI), SelectAPI.ControlConsole).Replace("Console", " Console");
-            else if (SetAPI.API == SelectAPI.XboxNeighborhood)
-                output = Enum.GetName(typeof(SelectAPI), SelectAPI.XboxNeighborhood).Replace("Neightborhood", "Neighborhood");
-            else if (SetAPI.API == SelectAPI.PCAPI)
-                output = Enum.GetName(typeof(SelectAPI), SelectAPI.PCAPI).Replace("API", "API");
+            if (SetAPI.API == SelectAPI.ProDG)
+                output = Enum.GetName(typeof(SelectAPI), SelectAPI.ProDG).Replace("Manager", " Manager");
+            else if (SetAPI.API == SelectAPI.CCAPI)
+                output = Enum.GetName(typeof(SelectAPI), SelectAPI.CCAPI).Replace("Console", " Console");
+            else if (SetAPI.API == SelectAPI.Xbox360)
+                output = Enum.GetName(typeof(SelectAPI), SelectAPI.Xbox360).Replace("Neighborhood", "Neighborhood");
             return output;
         }
 
@@ -287,125 +307,12 @@ namespace MultiLib
         {
             get { return new GameShark(); }
         }
-        public class ApplicationList
-        {
-            private MultiConsoleAPI Api;
-            Process[] ProcID = Process.GetProcesses();
-            public ApplicationList(MultiConsoleAPI f)
-            {
-                Api = f;
-            }
-            public bool Show()
-            {
-                bool Result = false;
-                int tNum = -1;
-
-                Process[] ProcID = Process.GetProcesses();
-                Label lblInfo = new Label();
-                Button btnConnect = new Button(), btnRefhresh = new Button();
-                ListViewGroup listViewGroup = new ListViewGroup("Applications", HorizontalAlignment.Left );
-                ListView listView = new ListView();
-                Form formList = new Form();
-
-                btnConnect.Location = new Point(12, 254);
-                btnConnect.Name = "btnConnect";
-                btnConnect.Size = new Size(198, 23);
-                btnConnect.TabIndex = 1;
-                btnConnect.Text = "Connect";
-                btnConnect.UseVisualStyleBackColor = true;
-                btnConnect.Enabled = false;
-                btnConnect.Click += (sender, e) =>
-                {
-                    //if (tNum > -1)
-                    //    Result = Common.PcApi.ConnectTarget(ProcID[tNum].ProcessName);
-                    formList.Close();
-                };
-
-                btnRefhresh.Location = new Point(216, 254);
-                btnRefhresh.Name = "btnRefresh";
-                btnRefhresh.Size = new Size(86, 23);
-                btnRefhresh.TabIndex = 1;
-                btnRefhresh.Text = "Refresh";
-                btnRefhresh.UseVisualStyleBackColor = true;
-                btnRefhresh.Click += (sender, e) =>
-                {
-                    tNum = -1;
-                    listView.Clear();
-                    lblInfo.Text = "Select An Application";
-                    btnConnect.Enabled = false;
-                    for (int i = 0; i < ProcID.Length; i++)
-                    {
-                        ListViewItem item = new ListViewItem(string.Format("{0}-{1}", ProcID[i].ProcessName, ProcID[i].Id));
-                        item.ImageIndex = 0;
-                        listView.Items.Add(item);
-                    }
-                };
-
-                listView.Font = new Font("Microsoft Times New Roman", 9F, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
-                listViewGroup.Header = "Applications";
-                listViewGroup.Name = "appList";
-                listView.Groups.AddRange(new ListViewGroup[] { listViewGroup });
-                listView.HideSelection = false;
-                listView.Location = new Point(12, 12);
-                listView.MultiSelect = false;
-                listView.Name = "_apps";
-                listView.ShowGroups = false;
-                listView.Size = new Size(290, 215);
-                listView.TabIndex = 0;
-                listView.UseCompatibleStateImageBehavior = false;
-                listView.View = View.List;
-                listView.ItemSelectionChanged += (sender, e) =>
-                {
-                    tNum = e.ItemIndex;
-                    btnConnect.Enabled = true;
-                    lblInfo.Text = ProcID[tNum].ProcessName;
-                };
-
-                lblInfo.AutoSize = true;
-                lblInfo.Location = new Point(12, 234);
-                lblInfo.Name = "lblInfo";
-                lblInfo.Size = new Size(158, 13);
-                lblInfo.TabIndex = 3;
-                lblInfo.Text = "Select App from List";
-
-                formList.MinimizeBox = false;
-                formList.MaximizeBox = false;
-                formList.ClientSize = new Size(314, 285);
-                formList.AutoScaleDimensions = new SizeF(6F, 13F);
-                formList.AutoScaleMode = AutoScaleMode.Font;
-                formList.FormBorderStyle = FormBorderStyle.FixedSingle;
-                formList.StartPosition = FormStartPosition.CenterScreen;
-                formList.Text = "Select Application";
-                formList.Controls.Add(listView);
-                formList.Controls.Add(lblInfo);
-                formList.Controls.Add(btnConnect);
-                formList.Controls.Add(btnRefhresh);
-
-                for (int i = 0; i < ProcID.Length; i++)
-                {
-                    ListViewItem item = new ListViewItem(string.Format("{0}-{1}", ProcID[i].ProcessName, ProcID[i].Id));
-                    item.ImageIndex = 0;
-                    listView.Items.Add(item);
-                }
-
-                if (ProcID.Length > 0)
-                    formList.ShowDialog();
-                else
-                {
-                    Result = false;
-                    formList.Close();
-                    MessageBox.Show("Something went wrong!");
-                }
-                return Result;
-            }
-
-        }
         public class ConsoleList
         {
-            private MultiConsoleAPI Api;
+            private MCAPI Api;
             private List<CCAPI.ConsoleInfo> data;
 
-            public ConsoleList(MultiConsoleAPI f)
+            public ConsoleList(MCAPI f)
             {
                 Api = f;
                 data = Api.CCAPI.GetConsoleList();
@@ -614,16 +521,56 @@ namespace MultiLib
             }
         }
 
-        public class ProcessList_d
+        public class ProcessList
         {
-            private TMAPI Api;
-            public ProcessList_d(TMAPI f) { Api = f; }
+            public ProcessList() { }
+            public bool isAttached { get { return TMAPI.Parameters.ProcessID > 0;  } }
+            private bool AttachProcess(ulong process)
+            {
+                bool isOK = false;
+                PS3TMAPI.GetProcessList(TMAPI.Target, out TMAPI.Parameters.processIDs);
+                if (TMAPI.Parameters.processIDs.Length > 0)
+                    isOK = true;
+                else isOK = false;
+                if (isOK)
+                {
+                    ulong uProcess = process;
+                    TMAPI.Parameters.ProcessID = Convert.ToUInt32(uProcess);
+                    PS3TMAPI.ProcessAttach(TMAPI.Target, PS3TMAPI.UnitType.PPU, TMAPI.Parameters.ProcessID);
+                    PS3TMAPI.ProcessContinue(TMAPI.Target, TMAPI.Parameters.ProcessID);
+                    TMAPI.Parameters.info = $"The Process 0x{TMAPI.Parameters.ProcessID:X8} Has Been Attached !";
+                }
+                return isOK;
+            }
+            private string[] ProcessNames
+            {
+                get
+                {
+                    PS3TMAPI.ProcessInfo current;
+                    string[] res = new string[TMAPI.Parameters.processIDs.Length];
+                    for (int i = 0; i < res.Length; i++)
+                    {
+                        PS3TMAPI.GetProcessInfo(0, TMAPI.Parameters.processIDs[i], out current);
+                        res[i] = current.Hdr.ELFPath == null ? $"0x{TMAPI.Parameters.processIDs[i]:X} | NULL" : $"0x{TMAPI.Parameters.processIDs[i]:X} | {current.Hdr.ELFPath.Split('/').Last()}";
+                    }
+
+                    return res;
+                }
+            }
+            public string CurrentProcessName
+            {
+                get
+                {
+                    PS3TMAPI.ProcessInfo current; PS3TMAPI.GetProcessInfo(TMAPI.Target, TMAPI.Parameters.ProcessID, out current);
+                    return current.Hdr.ELFPath.Split('/').Last();
+                }
+            }
             public bool Show()
             {
                 bool Result = false;
                 uint SelectedProcess = 0;
-                PS3TMAPI.GetProcessList(TMAPI.Target, out TMAPI.Parameters.processIDs);
-                foreach (var item in TMAPI.Parameters.processIDs) Console.WriteLine(item.ToString("X"));
+                PS3TMAPI.GetProcessList(0, out TMAPI.Parameters.processIDs);
+                //foreach (var item in TMAPI.Parameters.processIDs) Console.WriteLine(item.ToString("X"));
                 // Instance of widgets
                 Label lblInfo = new Label();
                 Button btnConnect = new Button();
@@ -643,7 +590,7 @@ namespace MultiLib
                 btnConnect.Click += (sender, e) =>
                 {
                     if (SelectedProcess > 0)
-                        if (Api.AttachProcess(SelectedProcess))
+                        if (AttachProcess(SelectedProcess))
                         {
                             formList.Close();
                             Result = true;
@@ -663,12 +610,7 @@ namespace MultiLib
                 btnRefresh.Click += (sender, e) =>
                 {
                     listView.Clear();
-                    for (int i = 0; i < Api.SCE.ProcessIDs().Length; i++)
-                    {
-                        ListViewItem item = new ListViewItem($" {Api.ProcessNames[i]} ");
-                        item.ImageIndex = 0;
-                        listView.Items.Add(item);
-                    }
+                    foreach (var item in ProcessNames) listView.Items.Add(item);
                 };
 
                 // Create our list view
@@ -687,9 +629,9 @@ namespace MultiLib
                 listView.View = View.List;
                 listView.ItemSelectionChanged += (sender, e) =>
                 {
-                    SelectedProcess = Convert.ToUInt32(Api.ProcessNames[e.ItemIndex].Split('|')[0].Trim(), 16);
+                    SelectedProcess = Convert.ToUInt32(ProcessNames[e.ItemIndex].Split('|')[0].Trim(), 16);
                     btnConnect.Enabled = true;
-                    lblInfo.Text = $"\"{Api.ProcessNames[e.ItemIndex].Split('/').Last().Replace("\n", "")}\" Selected";
+                    lblInfo.Text = $"\"{ProcessNames[e.ItemIndex].Split('/').Last().Replace("\n", "")}\" Selected";
                     //print pData
                 };
 
@@ -721,10 +663,10 @@ namespace MultiLib
                 //listView.SmallImageList = imgL;
 
 
-                int sizeData = Api.SCE.ProcessIDs().Length;
+                int sizeData = new TMAPI().SCE.ProcessIDs().Length;
                 for (int i = 0; i < sizeData; i++)
                 {
-                    ListViewItem item = new ListViewItem($" {Api.ProcessNames[i]} ");
+                    ListViewItem item = new ListViewItem($" {ProcessNames[i]} ");
                     item.ImageIndex = 0;
                     listView.Items.Add(item);
                 }

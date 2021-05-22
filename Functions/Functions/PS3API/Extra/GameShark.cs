@@ -5,7 +5,7 @@ namespace MultiLib
     {
         private Extension Extension
         {
-            get { return new Extension(SelectAPI.ControlConsole); }
+            get { return new Extension(SelectAPI.CCAPI); }
         }
         private CCAPI CCAPI
         {

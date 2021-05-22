@@ -1,7 +1,7 @@
 ﻿// ************************************************* //
 //    --- Copyright (c) 2015 iMCS Productions ---    //
 // ************************************************* //
-//              MultiLib v4 By FM|T iMCSx              //
+//              PS3Lib v4 By FM|T iMCSx              //
 //                                                   //
 // Features v4.5 :                                   //
 // - Support CCAPI v2.60+ C# by iMCSx.               //
@@ -30,7 +30,6 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 
-using MultiLib.NET;
 
 namespace MultiLib
 {
@@ -44,10 +43,10 @@ namespace MultiLib
         {
 
         }
-   
+
         public Extension Extension
         {
-            get { return new Extension(SelectAPI.TargetManager); }
+            get { return new Extension(SelectAPI.ProDG); }
         }
 
         public class SCECMD
@@ -129,65 +128,28 @@ namespace MultiLib
 
         /// <summary>Enum of flag reset.</summary>
         public enum ResetTarget
-        {      
+        {
             Hard,
             Quick,
             ResetEx,
             Soft
-        }
-        public string[] ProcessNames { get
-            {
-                PS3TMAPI.ProcessInfo current;
-                string[] res = new string[5];
-                for (int i = 0; i < res.Length; i++)
-                {
-                    PS3TMAPI.GetProcessInfo(Target, Parameters.processIDs[i], out current);
-                        res[i] = current.Hdr.ELFPath == null ? $"0x{Parameters.processIDs[i]:X} | NULL" : $"0x{Parameters.processIDs[i]:X} | {current.Hdr.ELFPath.Split('/').Last()}";
-                }
-
-                return res;
-            } }
-        public string CurrentProcessName
-        {
-            get
-            {
-                PS3TMAPI.ProcessInfo current; PS3TMAPI.GetProcessInfo(Target, Parameters.ProcessID, out current);
-                return current.Hdr.ELFPath.Split('/').Last();
-            }
         }
 
         public void InitComms()
         {
             PS3TMAPI.InitTargetComms();
         }
-        public bool Connection
-        {
-            get
-            {
-                PS3TMAPI.ConnectStatus status = new PS3TMAPI.ConnectStatus();
-                string usage = "";
-                PS3TMAPI.GetConnectStatus(Target, out status, out usage);
-                return status == PS3TMAPI.ConnectStatus.Connected;
 
-            }
-            set
-            {
-                if (value)
-                    ConnectTarget(Target);
-                else PS3TMAPI.Disconnect(Target);
-            }
-        }
         /// <summary>Connect the default target and initialize the dll. Possible to put an int as arugment for determine which target to connect.</summary>
         public bool ConnectTarget(int TargetIndex = 0)
         {
             bool result = false;
-            if(AssemblyLoaded)
+            if (AssemblyLoaded)
                 PS3TMAPI_NET();
             AssemblyLoaded = false;
             Target = TargetIndex;
             result = PS3TMAPI.SUCCEEDED(PS3TMAPI.InitTargetComms());
             result = PS3TMAPI.SUCCEEDED(PS3TMAPI.Connect(TargetIndex, null));
-            PS3TMAPI.GetProcessList(Target, out Parameters.processIDs);
             return result;
         }
 
@@ -203,8 +165,6 @@ namespace MultiLib
             {
                 result = PS3TMAPI.SUCCEEDED(PS3TMAPI.GetTargetFromName(TargetName, out Target));
                 result = PS3TMAPI.SUCCEEDED(PS3TMAPI.Connect(Target, null));
-                PS3TMAPI.GetProcessList(Target, out Parameters.processIDs);
-
             }
             return result;
         }
@@ -212,7 +172,6 @@ namespace MultiLib
         /// <summary>Disconnect the target.</summary>
         public void DisconnectTarget()
         {
-            Parameters.ProcessID = 0;
             PS3TMAPI.Disconnect(Target);
         }
 
@@ -240,55 +199,15 @@ namespace MultiLib
             else isOK = false;
             if (isOK)
             {
-                uint uProcess = Parameters.processIDs[2];
+                ulong uProcess = Parameters.processIDs[0];
                 Parameters.ProcessID = Convert.ToUInt32(uProcess);
                 PS3TMAPI.ProcessAttach(Target, PS3TMAPI.UnitType.PPU, Parameters.ProcessID);
                 PS3TMAPI.ProcessContinue(Target, Parameters.ProcessID);
-                Parameters.info = $"The Process 0x{Parameters.ProcessID:X8} Has Been Attached !";
+                Parameters.info = "The Process 0x" + Parameters.ProcessID.ToString("X8") + " Has Been Attached !";
             }
             return isOK;
         }
-        public bool isProcessStopped()
-        {
-            ulong[] ppu;
-            ulong[] spu;
-            PS3TMAPI.GetThreadList(0, SCE.ProcessID(), out ppu, out spu);
-            foreach (ulong tID in ppu)
-            {
-                PS3TMAPI.PPUThreadInfo ppuTI;
-                PS3TMAPI.GetPPUThreadInfo(0, SCE.ProcessID(), tID, out ppuTI);
-                if (ppuTI.State != PS3TMAPI.PPUThreadState.OnProc && ppuTI.State != PS3TMAPI.PPUThreadState.Sleep && ppuTI.State != PS3TMAPI.PPUThreadState.Runnable)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        public bool AttachProcess(uint Process)
-        {
-            bool isOK = false;
-            PS3TMAPI.GetProcessList(Target, out Parameters.processIDs);
-            if (Parameters.processIDs.Length > 0)
-                isOK = true;
-            else isOK = false;
-            if (isOK)
-            {
-                ulong uProcess = Process;
-                Parameters.ProcessID = Convert.ToUInt32(uProcess);
-                PS3TMAPI.ProcessAttach(Target, PS3TMAPI.UnitType.PPU, Parameters.ProcessID);
-                PS3TMAPI.ProcessContinue(Target, Parameters.ProcessID);
-                Parameters.info = $"The Process 0x{Parameters.ProcessID:X8} Has Been Attached !";
-            }
-            return isOK;
-        }
-        public void ContinueProcess()
-        {
-            PS3TMAPI.ProcessContinue(TMAPI.Target, TMAPI.Parameters.ProcessID);
-        }
-        public bool AttachProcessFromList()
-        {
-            return new MultiConsoleAPI.ProcessList_d(new TMAPI()).Show();
-        }
+
         /// <summary>Set memory to the target (byte[]).</summary>
         public void SetMemory(uint Address, byte[] Bytes)
         {
@@ -317,10 +236,7 @@ namespace MultiLib
         {
             PS3TMAPI.ProcessGetMemory(Target, PS3TMAPI.UnitType.PPU, Parameters.ProcessID, 0, Address, ref Bytes);
         }
-        public void GetMemory(ulong Address, byte[] Bytes)
-        {
-            PS3TMAPI.ProcessGetMemory(Target, PS3TMAPI.UnitType.PPU, Parameters.ProcessID, 0, Address, ref Bytes);
-        }
+
         /// <summary>Get a bytes array with the length input.</summary>
         public byte[] GetBytes(uint Address, uint lengthByte)
         {
@@ -372,7 +288,7 @@ namespace MultiLib
             string PSNString = BitConverter.ToString(bytes);
             PSNString = PSNString.Replace("00", string.Empty);
             PSNString = PSNString.Replace("-", string.Empty);
-            for(int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++)
                 PSNString = PSNString.Replace("^" + i.ToString(), string.Empty);
             return PSNString;
         }

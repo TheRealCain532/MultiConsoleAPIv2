@@ -1,7 +1,7 @@
 ﻿// ************************************************* //
 //    --- Copyright (c) 2015 iMCS Productions ---    //
 // ************************************************* //
-//              MultiLib v4 By FM|T iMCSx              //
+//              PS3Lib v4 By FM|T iMCSx              //
 //                                                   //
 // Features v4.5 :                                   //
 // - Support CCAPI v2.60+ C# by iMCSx.               //
@@ -135,6 +135,7 @@ namespace MultiLib
                     {
                         if (libModule == IntPtr.Zero)
                             libModule = LoadLibrary(DllUrl);
+
                         if (libModule != IntPtr.Zero)
                         {
                             CCAPIFunctionsList.Clear();
@@ -180,13 +181,12 @@ namespace MultiLib
                             }
                             else
                             {
-                                MessageBox.Show("1 Impossible to load CCAPI 2.60+", "This CCAPI.dll is not compatible", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show("Impossible to load CCAPI 2.60+", "This CCAPI.dll is not compatible", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                         }
                         else
                         {
-                            MessageBox.Show("2 Impossible to load CCAPI 2.60+", "CCAPI.dll cannot be loaded", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            
+                            MessageBox.Show("Impossible to load CCAPI 2.60+", "CCAPI.dll cannot be loaded", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
                     else
@@ -318,11 +318,7 @@ namespace MultiLib
 
         public Extension Extension
         {
-            get { return new Extension(SelectAPI.ControlConsole); }
-        }
-        public GameShark GameShark
-        {
-            get { return new GameShark(); }
+            get { return new Extension(SelectAPI.CCAPI); }
         }
 
         private IntPtr GetCCAPIFunctionPtr(CCAPIFunctions Function)
@@ -359,7 +355,7 @@ namespace MultiLib
         /// <summary>Connect your console by console list.</summary>
         public bool ConnectTarget()
         {
-            return new MultiConsoleAPI.ConsoleList(new MultiConsoleAPI(SelectAPI.ControlConsole)).Show();
+            return new MCAPI.ConsoleList(new MCAPI(SelectAPI.CCAPI)).Show();
         }
 
         /// <summary>Connect your console by ip address.</summary>
@@ -659,7 +655,7 @@ namespace MultiLib
             return type;
         }
 
-        /// <summary>Clear informations into the DLL (MultiLib).</summary>
+        /// <summary>Clear informations into the DLL (PS3Lib).</summary>
         public void ClearTargetInfo()
         {
             pInfo = new TargetInfo();
@@ -762,7 +758,7 @@ namespace MultiLib
             return data;
         }
 
-        public static byte[] StringToByteArray(string hex)
+        internal static byte[] StringToByteArray(string hex)
         {
             try
             {

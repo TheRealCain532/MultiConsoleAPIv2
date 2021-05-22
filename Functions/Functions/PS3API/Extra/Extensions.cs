@@ -33,13 +33,13 @@ namespace MultiLib
         public Extension(SelectAPI API)
         {
             CurrentAPI = API;
-            if (API == SelectAPI.TargetManager)
+            if (API == SelectAPI.ProDG)
                 if (Common.TmApi == null)
                     Common.TmApi = new TMAPI();
-            if (API == SelectAPI.ControlConsole)
+            if (API == SelectAPI.CCAPI)
                 if (Common.CcApi == null)
                     Common.CcApi = new CCAPI();
-            if (API == SelectAPI.XboxNeighborhood)
+            if (API == SelectAPI.Xbox360)
                 if (Common.XboxApi == null)
                     Common.XboxApi = new XboxAPI();
         }
@@ -220,8 +220,6 @@ namespace MultiLib
         {
             byte[] buff = new byte[1];
             buff[0] = input;
-            if (CurrentAPI == SelectAPI.PCAPI)
-                Array.Reverse(buff);
             SetMem(offset, buff, CurrentAPI);
         }
 
@@ -229,8 +227,6 @@ namespace MultiLib
         public void WriteBytes(uint offset, byte[] input)
         {
             byte[] buff = input;
-            if (CurrentAPI == SelectAPI.PCAPI)
-                Array.Reverse(buff);
             SetMem(offset, buff, CurrentAPI);
         }
 
@@ -306,32 +302,32 @@ namespace MultiLib
         }
         private void SetMem(uint Address, byte[] buffer, SelectAPI API)
         {
-            if (API == SelectAPI.ControlConsole)
+            if (API == SelectAPI.CCAPI)
                 Common.CcApi.SetMemory(Address, buffer);
-            else if (API == SelectAPI.TargetManager)
+            else if (API == SelectAPI.ProDG)
                 Common.TmApi.SetMemory(Address, buffer);
-            else if (API == SelectAPI.XboxNeighborhood)
+            else if (API == SelectAPI.Xbox360)
                 Common.XboxApi.SetMemory(Address, buffer);
         }
 
         private void GetMem(uint offset, byte[] buffer, SelectAPI API)
         {
-            if (API == SelectAPI.ControlConsole)
+            if (API == SelectAPI.CCAPI)
                 Common.CcApi.GetMemory(offset, buffer);
-            else if (API == SelectAPI.TargetManager)
+            else if (API == SelectAPI.ProDG)
                 Common.TmApi.GetMemory(offset, buffer);
-            else if (API == SelectAPI.XboxNeighborhood)
+            else if (API == SelectAPI.Xbox360)
                 Common.XboxApi.MemFunc(offset, buffer);
         }
 
         private byte[] GetBytes(uint offset, uint length, SelectAPI API)
         {
             byte[] buffer = new byte[length];
-            if (API == SelectAPI.ControlConsole)
+            if (API == SelectAPI.CCAPI)
                 buffer = Common.CcApi.GetBytes(offset, length);
-            else if (API == SelectAPI.TargetManager)
+            else if (API == SelectAPI.ProDG)
                 buffer = Common.TmApi.GetBytes(offset, length);
-            else if (API == SelectAPI.XboxNeighborhood)
+            else if (API == SelectAPI.Xbox360)
                 buffer = Common.XboxApi.GetBytes(offset, length);
             return buffer;
         }
